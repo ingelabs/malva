@@ -39,19 +39,20 @@ CLASSES += src/malva/java/util/regex/PatternTest.class
 
 SRC	:= $(patsubst %.class,%.java,$(CLASSES))
 
-$(CLASSES): $(SRC)
+compile-classes: $(SRC)
 	$(E) "  JAVAC   " $?
 	$(Q) $(JAVAC) -g -Xlint:unchecked -source 1.6 -target 1.6 -encoding utf8 -cp src $?
+	$(Q) touch compile-classes
 
-all: $(CLASSES)
-.PHONY: all
+all: compile-classes
 
-check: $(CLASSES)
+check: all
 	$(E) "  CHECK"
 	$(Q) ./scripts/suite
-.PHONY: check
 
 clean:
 	$(E) "  CLEAN"
 	$(Q) - find src/ -name "*.class" | xargs rm -f
-.PHONY: clean
+	$(Q) rm -f compile-classes
+
+.PHONY: all check clean
