@@ -31,6 +31,7 @@ CLASSES += src/malva/java/lang/SystemTest.class
 CLASSES += src/malva/java/lang/ThreadTest.class
 CLASSES += src/malva/java/lang/ThrowableTest.class
 CLASSES += src/malva/java/lang/reflect/FieldTest.class
+CLASSES += src/malva/java/math/BigDecimalTest.class
 CLASSES += src/malva/java/net/InetAddressTest.class
 CLASSES += src/malva/java/net/NetworkInterfaceTest.class
 CLASSES += src/malva/java/nio/DirectByteBufferTest.class
