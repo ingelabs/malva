@@ -34,9 +34,9 @@ CLASSES += src/malva/java/lang/reflect/FieldTest.class
 CLASSES += src/malva/java/net/InetAddressTest.class
 CLASSES += src/malva/java/net/NetworkInterfaceTest.class
 CLASSES += src/malva/java/nio/DirectByteBufferTest.class
+CLASSES += src/malva/java/text/DecimalFormatTest.class
 CLASSES += src/malva/java/util/HashMapTest.class
 CLASSES += src/malva/java/util/regex/PatternTest.class
-CLASSES += src/malva/java/text/DecimalFormatTest.class
 
 SRC	:= $(patsubst %.class,%.java,$(CLASSES))
 
