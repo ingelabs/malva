@@ -60,7 +60,7 @@ public class BigDecimalTest extends TestCase {
     assertEquals("12.3", new BigDecimal(positiveInt, 1).toPlainString());
     assertEquals("0.00123", new BigDecimal(positiveInt, 5).toPlainString());
     assertEquals("0.0000000123", new BigDecimal(positiveInt, 10).toPlainString());
-    
+
     // Negative values
     BigInteger negativeInt = new BigInteger("-123");
     assertEquals("-100", new BigDecimal(-100).toPlainString());
@@ -72,9 +72,40 @@ public class BigDecimalTest extends TestCase {
     assertEquals("-0.000000000123", new BigDecimal(negativeInt, 12).toPlainString());
   }
 
+  public static void testToString() {
+    // Class constants
+    assertEquals("0", BigDecimal.ZERO.toString());
+    assertEquals("1", BigDecimal.ONE.toString());
+    assertEquals("10", BigDecimal.TEN.toString());
+
+    // Positive values
+    BigInteger positiveInt = new BigInteger("123");
+    assertEquals("100", new BigDecimal(100).toString());
+    assertEquals("10000", new BigDecimal("10000").toString());
+    assertEquals("1E+1", new BigDecimal(BigInteger.ONE, -1).toString());
+    assertEquals("1E-10", new BigDecimal(BigInteger.ONE, 10).toString());
+    assertEquals("123", new BigDecimal(positiveInt, 0).toString());
+    assertEquals("1.23E+3", new BigDecimal(positiveInt, -1).toString());
+    assertEquals("1.23E+5", new BigDecimal(positiveInt, -3).toString());
+    assertEquals("12.3", new BigDecimal(positiveInt, 1).toString());
+    assertEquals("0.00123", new BigDecimal(positiveInt, 5).toString());
+    assertEquals("1.23E-8", new BigDecimal(positiveInt, 10).toString());
+
+    // Negative values
+    BigInteger negativeInt = new BigInteger("-123");
+    assertEquals("-100", new BigDecimal(-100).toString());
+    assertEquals("-10000", new BigDecimal("-10000").toString());
+    assertEquals("-1E+1", new BigDecimal(new BigInteger("-1"), -1).toString());
+    assertEquals("-1E-10", new BigDecimal(new BigInteger("-1"), 10).toString());
+    assertEquals("-1.23E+5", new BigDecimal(negativeInt, -3).toString());
+    assertEquals("-123", new BigDecimal(negativeInt, 0).toString());
+    assertEquals("-1.23E-10", new BigDecimal(negativeInt, 12).toString());
+  }
+
   public static void main(String[] args) {
     testStripTrailingZeros();
     testToEngineeringString();
     testToPlainString();
+    testToString();
   }
 }
