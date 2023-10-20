@@ -111,6 +111,24 @@ public class ProcessTest extends TestCase {
     }
   }
 
+  public static void testInterrupted()
+  {
+    try {
+      // Check interrupted status is not cleared when process is started
+      Thread.currentThread().interrupt();
+      Process process = Runtime.getRuntime().exec("sleep 5");
+      assertTrue(Thread.interrupted());
+
+      // Check interrupted status is not cleared when destroy is called
+      assertFalse(Thread.interrupted());
+      Thread.currentThread().interrupt();
+      process.destroy();
+      assertTrue(Thread.interrupted());
+    } catch (IOException e) {
+      fail("Test failed: " + e.getMessage());
+    }
+  }
+
   public static void main(String[] args) {
     testDestroy();
 //    testExitValue();
@@ -118,5 +136,6 @@ public class ProcessTest extends TestCase {
     testGetInputStream();
     testGetOutputStream();
     testWaitFor();
+    testInterrupted();
   }
 }
