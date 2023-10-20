@@ -13,7 +13,6 @@ public class ProcessTest extends TestCase {
       process.destroy();
     } catch (IOException e) {
       fail("Test failed: " + e.getMessage());
-      throw new RuntimeException(e);
     }
   }
 
@@ -28,7 +27,6 @@ public class ProcessTest extends TestCase {
       assertEquals(0, process.exitValue());
     } catch (Exception e) {
       fail("Test failed: " + e.getMessage());
-      throw new RuntimeException(e);
     }
 
     try {
@@ -45,7 +43,6 @@ public class ProcessTest extends TestCase {
       process.waitFor();
     } catch (Exception e) {
       fail("Test failed: " + e.getMessage());
-      throw new RuntimeException(e);
     }
   }
 
@@ -57,7 +54,6 @@ public class ProcessTest extends TestCase {
       process.destroy();
     } catch (IOException e) {
       fail("Test failed: "  + e.getMessage());
-      e.printStackTrace();
     }
   }
 
@@ -69,7 +65,6 @@ public class ProcessTest extends TestCase {
       process.destroy();
     } catch (IOException e) {
       fail("Test failed: "  + e.getMessage());
-      e.printStackTrace();
     }
   }
 
@@ -81,7 +76,6 @@ public class ProcessTest extends TestCase {
       process.destroy();
     } catch (IOException e) {
       fail("Test failed: "  + e.getMessage());
-      e.printStackTrace();
     }
   }
 
@@ -96,7 +90,6 @@ public class ProcessTest extends TestCase {
           process.waitFor();
         } catch (Exception e) {
           fail("Test failed: "  + e.getMessage());
-          throw new RuntimeException(e);
         }
       }
     });
@@ -107,7 +100,6 @@ public class ProcessTest extends TestCase {
       testerThread.join(100);
     } catch (InterruptedException e) {
       fail("Test failed as test did not complete in time: " + e.getMessage());
-      e.printStackTrace();
     }
   }
 
