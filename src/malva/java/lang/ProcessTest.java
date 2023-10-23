@@ -135,7 +135,7 @@ public class ProcessTest extends TestCase {
     testGetErrorStream();
     testGetInputStream();
     testGetOutputStream();
-    testWaitFor();
     testInterrupted();
+    testWaitFor();
   }
 }
