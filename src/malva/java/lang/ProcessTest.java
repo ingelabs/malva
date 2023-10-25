@@ -79,27 +79,36 @@ public class ProcessTest extends TestCase {
     }
   }
 
-  public static void testWaitFor() {
-    try {
-      final Process process = Runtime.getRuntime().exec("env");
+  private static void testWaitFor(String[] cmd, boolean readOutput, int joinTimeMs) throws Exception {
+    final Process process = Runtime.getRuntime().exec(cmd);
+    if (readOutput) {
       // Read all output after which the process will complete
       while (process.getInputStream().read() != -1);
+    }
 
-      Thread testerThread = new Thread(new Runnable() {
-        @Override public void run() {
-          try {
-            process.waitFor();
-          } catch (InterruptedException e) {
-            // ignored
-          }
+    Thread testerThread = new Thread(new Runnable() {
+      @Override public void run() {
+        try {
+          process.waitFor();
+        } catch (InterruptedException e) {
+          // ignored
         }
-      });
+      }
+    });
 
-      testerThread.start();
-      testerThread.join(100);
-      // Check that the thread exited, and that the process finished successfully
-      assertFalse(testerThread.isAlive());
-      assertEquals(0, process.exitValue());
+    testerThread.start();
+    testerThread.join(joinTimeMs);
+    // Check that the thread exited, and that the process finished successfully
+    assertFalse(testerThread.isAlive());
+    assertEquals(0, process.exitValue());
+  }
+
+  public static void testWaitFor() {
+    try {
+      // Test calling waitFor() after the process has already finished
+      testWaitFor(new String[] {"env"}, true, 100);
+      // Test calling waitFor() before the process finishes
+      testWaitFor(new String[] {"sleep", "0.1"}, false, 250);
     } catch (Exception e) {
       fail("Test failed: "  + e);
     }
