@@ -5,14 +5,33 @@ import java.io.IOException;
 import malva.TestCase;
 
 public class ProcessTest extends TestCase {
+  private static void testDestroy(String[] cmd, boolean readOutput, int joinTimeMs) throws Exception {
+    final Process process = Runtime.getRuntime().exec(cmd);
+    if (readOutput) {
+      // Read all output after which the process will complete
+      while (process.getInputStream().read() != -1);
+    }
+
+    Thread testerThread = new Thread(new Runnable() {
+      @Override public void run() {
+        process.destroy();
+      }
+    });
+
+    testerThread.start();
+    testerThread.join(joinTimeMs);
+    // Check that the thread exited
+    assertFalse(testerThread.isAlive());
+  }
 
   public static void testDestroy() {
-    ProcessBuilder processBuilder = new ProcessBuilder("echo", "test");
     try {
-      Process process = processBuilder.start();
-      process.destroy();
-    } catch (IOException e) {
-      fail("Test failed: " + e.getMessage());
+      // Test calling destroy() after the process has already finished
+      testDestroy(new String[] {"env"}, true, 50);
+      // Test calling destroy() before the process finishes
+      testDestroy(new String[] {"sleep", "0.1"}, false, 150);
+    } catch (Exception e) {
+      fail("Test failed: "  + e);
     }
   }
 
