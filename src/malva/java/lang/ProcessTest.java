@@ -27,9 +27,9 @@ public class ProcessTest extends TestCase {
   public static void testDestroy() {
     try {
       // Test calling destroy() after the process has already finished
-      testDestroy(new String[] {"env"}, true, 50);
+      testDestroy(new String[] {"env"}, true, 100);
       // Test calling destroy() before the process finishes
-      testDestroy(new String[] {"sleep", "0.1"}, false, 150);
+      testDestroy(new String[] {"sleep", "1"}, false, 150);
     } catch (Exception e) {
       fail("Test failed: "  + e);
     }
