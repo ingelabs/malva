@@ -1,8 +1,8 @@
 package malva.java.text;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.text.AttributedCharacterIterator.Attribute;
 import java.text.NumberFormat.Field;
 import java.util.Arrays;
@@ -14,15 +14,43 @@ import malva.TestCase;
 
 public class DecimalFormatTest extends TestCase {
   public static void testFormat() {
-    // Format with suffix
-    DecimalFormat df = new DecimalFormat("0.0 unit", new DecimalFormatSymbols(Locale.US));
+    // Test localization
+    Locale.setDefault(new Locale("es", "ES"));
+    DecimalFormat df = new DecimalFormat("0.0 unit");
+    assertEquals("4,3 unit", df.format(4.3));
+    assertEquals("-4,3 unit", df.format(-4.3));
+
+    Locale.setDefault(Locale.US);
+    df = new DecimalFormat("0.0 unit");
     assertEquals("4.3 unit", df.format(4.3));
     assertEquals("-4.3 unit", df.format(-4.3));
 
-    DecimalFormatSymbols spanishSymbols = new DecimalFormatSymbols(new Locale("es", "ES"));
-    df.setDecimalFormatSymbols(spanishSymbols);
-    assertEquals("4,3 unit", df.format(4.3));
-    assertEquals("-4,3 unit", df.format(-4.3));
+    // format(long|double)
+    df.applyPattern("0.##");
+    assertEquals("0", df.format(0d));
+    assertEquals("0.12", df.format(0.12));
+    assertEquals("12.34", df.format(12.34));
+    assertEquals("-12.34", df.format(-12.34));
+    assertEquals("123.4", df.format(123.40));
+    assertEquals("0", df.format(0));
+    assertEquals("1234", df.format(1234));
+    assertEquals("-1234", df.format(-1234));
+
+    df.applyPattern("#,##0.###");
+    assertEquals("1,234", df.format(1234d));
+    assertEquals("1,234.56", df.format(1234.560));
+    assertEquals("-1,234.567", df.format(-1234.567));
+    assertEquals("-1,234.568", df.format(-1234.5678));
+    assertEquals("1,234,567", df.format(1234567));
+    assertEquals("-1,234", df.format(-1234));
+
+    // format(Object)
+    assertEquals("1,234,567,890", df.format(BigInteger.valueOf(1234567890)));
+    assertEquals("0", df.format(BigDecimal.ZERO));
+    assertEquals("12,345", df.format(Long.valueOf("12345")));
+    assertEquals("1,234.568", df.format(Double.valueOf("1234.5678")));
+    assertEquals("1.2", df.format(Float.valueOf("001.2")));
+    assertEquals("-1", df.format(Byte.valueOf((byte) 255)));
   }
 
   public static void testFormatToCharacterIterator() {
