@@ -3,8 +3,10 @@ package malva.java.text;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.AttributedCharacterIterator.Attribute;
 import java.text.NumberFormat.Field;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Set;
 
@@ -40,27 +42,31 @@ public class DecimalFormatTest extends TestCase {
     }, IllegalArgumentException.class);
 
     // Attributes check
-    Set<?> attrs;
+    Set<Attribute> attrs;
     attrs = formatAndGetAttrs(df, 0);
-    assertTrue(attrs.containsAll(Arrays.asList(Field.INTEGER)));
+    assertTrue(checkEqualAttrs(attrs, Arrays.asList(Field.INTEGER)));
 
     attrs = formatAndGetAttrs(df, Double.valueOf(1.23));
-    assertTrue(attrs.containsAll(Arrays.asList(Field.INTEGER, Field.DECIMAL_SEPARATOR, Field.FRACTION)));
+    assertTrue(checkEqualAttrs(attrs, Arrays.asList(Field.INTEGER, Field.DECIMAL_SEPARATOR, Field.FRACTION)));
 
     attrs = formatAndGetAttrs(df, Double.valueOf(-1.23));
-    assertTrue(attrs.containsAll(Arrays.asList(Field.SIGN, Field.INTEGER, Field.DECIMAL_SEPARATOR, Field.FRACTION)));
+    assertTrue(checkEqualAttrs(attrs, Arrays.asList(Field.SIGN, Field.INTEGER, Field.DECIMAL_SEPARATOR, Field.FRACTION)));
 
     attrs = formatAndGetAttrs(df, new BigDecimal(Math.PI));
-    assertTrue(attrs.containsAll(Arrays.asList(Field.INTEGER, Field.DECIMAL_SEPARATOR, Field.FRACTION)));
+    assertTrue(checkEqualAttrs(attrs, Arrays.asList(Field.INTEGER, Field.DECIMAL_SEPARATOR, Field.FRACTION)));
 
     attrs = formatAndGetAttrs(df, new BigDecimal("123"));
-    assertTrue(attrs.containsAll(Arrays.asList(Field.INTEGER)));
+    assertTrue(checkEqualAttrs(attrs, Arrays.asList(Field.INTEGER)));
 
     attrs = formatAndGetAttrs(df, Long.valueOf("12345"));
-    assertTrue(attrs.containsAll(Arrays.asList(Field.INTEGER)));
+    assertTrue(checkEqualAttrs(attrs, Arrays.asList(Field.INTEGER)));
   }
 
-  private static Set<?> formatAndGetAttrs(DecimalFormat df, Object obj) {
+  private static boolean checkEqualAttrs(Set<Attribute> actual, Collection<? extends Attribute> expected) {
+    return actual.size() == expected.size() && actual.containsAll(expected);
+  }
+
+  private static Set<Attribute> formatAndGetAttrs(DecimalFormat df, Object obj) {
     return df.formatToCharacterIterator(obj).getAllAttributeKeys();
   }
 
