@@ -26,14 +26,14 @@ public class TestCase {
     void run() throws Throwable;
   }
 
-  protected static void assertThrows(Block block, Class<? extends Throwable> type) {
+  protected static void assertThrows(Block block, Class<? extends Throwable> expected) {
     try {
       block.run();
-    } catch (Throwable t) {
-       assertEquals(type, t.getClass());
-       return;
+    } catch (Throwable actual) {
+      if (expected.isInstance(actual))
+        return;
     }
-    fail("Expected " + type.toString() + " to be thrown");
+    fail("Expected " + expected.getCanonicalName() + " to be thrown");
   }
 
   protected static void assertTrue(boolean actual) {
