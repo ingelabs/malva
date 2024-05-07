@@ -34,6 +34,7 @@ CLASSES += src/malva/java/lang/reflect/FieldTest.class
 CLASSES += src/malva/java/math/BigDecimalTest.class
 CLASSES += src/malva/java/net/InetAddressTest.class
 CLASSES += src/malva/java/net/NetworkInterfaceTest.class
+CLASSES += src/malva/java/net/URLConnectionTest.class
 CLASSES += src/malva/java/nio/DirectByteBufferTest.class
 CLASSES += src/malva/java/text/DecimalFormatTest.class
 CLASSES += src/malva/java/text/SimpleDateFormatTest.class
