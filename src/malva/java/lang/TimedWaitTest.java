@@ -6,10 +6,10 @@ import java.util.concurrent.locks.LockSupport;
 
 import malva.TestCase;
 
-public class ThreadParkTest extends TestCase {
+public class TimedWaitTest extends TestCase {
     /**
      * Disabled by default since these tests need to change the system time,
-     * which is OS-specific and requires privileges.
+     * which requires privileges.
      */
     private static final boolean ENABLE_TIME_JUMP_TESTS = false;
 
@@ -105,7 +105,7 @@ public class ThreadParkTest extends TestCase {
                 if (useSleep) {
                     try { Thread.sleep(NOMINAL_JUMP_TESTS_WAIT_MS); } catch (InterruptedException e) {}
                 } else {
-                    Object lock = ThreadParkTest.class;
+                    Object lock = TimedWaitTest.class;
                     synchronized (lock) {
                         try { lock.wait(NOMINAL_JUMP_TESTS_WAIT_MS); } catch (InterruptedException e) {}
                     }
