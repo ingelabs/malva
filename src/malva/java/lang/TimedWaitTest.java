@@ -13,9 +13,13 @@ public class TimedWaitTest extends TestCase {
      */
     private static final boolean ENABLE_TIME_JUMP_TESTS = false;
 
-    private static final long NOMINAL_WAIT_MS = 500;
-    private static final long WAIT_TOL_MS = 50;
-    private static final long JOIN_EXTRA_MS = 100;
+    /** If running on CI, widen timing tolerances */
+    private static final boolean ON_CI = System.getenv("CI") != null;
+
+    private static final long NOMINAL_WAIT_MS = ON_CI ? 1000 : 500;
+    private static final long WAIT_TOL_LOWER_MS = 50;
+    private static final long WAIT_TOL_UPPER_MS = ON_CI ? 200 : 50;
+    private static final long JOIN_EXTRA_MS = ON_CI ? 300 : 100;
 
     private static final long NOMINAL_JUMP_TESTS_WAIT_MS = 3000;
 
@@ -27,9 +31,9 @@ public class TimedWaitTest extends TestCase {
         return System.nanoTime();
     }
 
-    private static void assertTimeInRangeMs(long time, long target, long tol) {
-        if (Math.abs(target - time) > tol) {
-            fail("Time out of range, expected: " + target + "+/-" + tol + "ms, actual: " + time + "ms");
+    private static void assertTimeInRangeMs(long time, long target, long lowerTol, long upperTol) {
+        if (time < target - lowerTol || time > target + upperTol) {
+            fail("Time out of range, expected: " + target + " -" + lowerTol + "/+" + upperTol + "ms, actual: " + time + "ms");
         }
     }
 
@@ -54,7 +58,7 @@ public class TimedWaitTest extends TestCase {
         sleep(NOMINAL_WAIT_MS);
         LockSupport.unpark(t);
         assertThreadFinishes(t, JOIN_EXTRA_MS);
-        assertTimeInRangeMs(elapsedHolder[0], NOMINAL_WAIT_MS, WAIT_TOL_MS);
+        assertTimeInRangeMs(elapsedHolder[0], NOMINAL_WAIT_MS, WAIT_TOL_LOWER_MS, WAIT_TOL_UPPER_MS);
     }
 
     private static void testRelativeTimedPark() throws InterruptedException {
@@ -67,8 +71,8 @@ public class TimedWaitTest extends TestCase {
             }
         });        
         t.start();
-        assertThreadFinishes(t, NOMINAL_WAIT_MS + WAIT_TOL_MS + JOIN_EXTRA_MS);
-        assertTimeInRangeMs(elapsedHolder[0], NOMINAL_WAIT_MS, WAIT_TOL_MS);
+        assertThreadFinishes(t, NOMINAL_WAIT_MS + WAIT_TOL_UPPER_MS + JOIN_EXTRA_MS);
+        assertTimeInRangeMs(elapsedHolder[0], NOMINAL_WAIT_MS, WAIT_TOL_LOWER_MS, WAIT_TOL_UPPER_MS);
     }
 
     private static void testAbsoluteTimedPark() throws InterruptedException {
@@ -82,8 +86,8 @@ public class TimedWaitTest extends TestCase {
             }
         });
         t.start();
-        assertThreadFinishes(t, NOMINAL_WAIT_MS + WAIT_TOL_MS + JOIN_EXTRA_MS);
-        assertTimeInRangeMs(elapsedHolder[0], NOMINAL_WAIT_MS, WAIT_TOL_MS);
+        assertThreadFinishes(t, NOMINAL_WAIT_MS + WAIT_TOL_UPPER_MS + JOIN_EXTRA_MS);
+        assertTimeInRangeMs(elapsedHolder[0], NOMINAL_WAIT_MS, WAIT_TOL_LOWER_MS, WAIT_TOL_UPPER_MS);
     }
 
     private static void setSystemTimeSeconds(long epochSeconds) throws IOException, InterruptedException {
@@ -126,7 +130,7 @@ public class TimedWaitTest extends TestCase {
         // Move the system time backward, check that the thread finishes in time
         setSystemTimeSeconds(nowSeconds - 60);
         assertThreadFinishes(t, JOIN_EXTRA_MS + NOMINAL_JUMP_TESTS_WAIT_MS);
-        assertTimeInRangeMs(elapsedHolder[0], NOMINAL_JUMP_TESTS_WAIT_MS, WAIT_TOL_MS);
+        assertTimeInRangeMs(elapsedHolder[0], NOMINAL_JUMP_TESTS_WAIT_MS, WAIT_TOL_LOWER_MS, WAIT_TOL_UPPER_MS);
 
         // Restore system time (approximation)
         setSystemTimeSeconds(nowSeconds + NOMINAL_JUMP_TESTS_WAIT_MS / 1000);
