@@ -15,34 +15,7 @@ else
 endif
 export E Q
 
-CLASSES	+= src/malva/TestCase.class
-CLASSES	+= src/malva/java/lang/ClassLoaderTest.class
-CLASSES	+= src/malva/java/lang/DoubleTest.class
-CLASSES	+= src/malva/java/lang/FloatTest.class
-CLASSES	+= src/malva/java/lang/LongTest.class
-CLASSES	+= src/malva/java/lang/MathTest.class
-CLASSES	+= src/malva/java/lang/StringTest.class
-CLASSES += src/malva/java/io/PrintStreamTest.class
-CLASSES += src/malva/java/lang/ClassTest.class
-CLASSES += src/malva/java/lang/ObjectTest.class
-CLASSES += src/malva/java/lang/ProcessTest.class
-CLASSES += src/malva/java/lang/RuntimeTest.class
-CLASSES += src/malva/java/lang/SystemTest.class
-CLASSES += src/malva/java/lang/ThreadTest.class
-CLASSES += src/malva/java/lang/ThrowableTest.class
-CLASSES += src/malva/java/lang/TimedWaitTest.class
-CLASSES += src/malva/java/lang/reflect/FieldTest.class
-CLASSES += src/malva/java/math/BigDecimalTest.class
-CLASSES += src/malva/java/net/InetAddressTest.class
-CLASSES += src/malva/java/net/NetworkInterfaceTest.class
-CLASSES += src/malva/java/nio/DirectByteBufferTest.class
-CLASSES += src/malva/java/text/DateFormatSymbolsTest.class
-CLASSES += src/malva/java/text/DecimalFormatTest.class
-CLASSES += src/malva/java/text/SimpleDateFormatTest.class
-CLASSES += src/malva/java/util/HashMapTest.class
-CLASSES += src/malva/java/util/regex/PatternTest.class
-
-SRC	:= $(patsubst %.class,%.java,$(CLASSES))
+SRC := $(shell find src -name '*.java')
 
 compile-classes: $(SRC)
 	$(E) "  JAVAC   " $?
