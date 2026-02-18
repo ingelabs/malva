@@ -1,18 +1,28 @@
 #!/bin/bash
 
+run=0
+failed=0
+
 function check
 {
   class=$(echo $1 | sed "s/.class//g" | sed "s/^src.//g")
-  expected=""
-  actual=$($JAVA -cp src $class)
+  output=$($JAVA -cp src $class)
   if [ "$?" != "0" ]; then
-    echo "$class: Test FAILED"
-    exit 1
+    echo "$class: FAILED"
+    failed=$((failed + 1))
+    [ "$SUITE_RUN_ALL" != "1" ] && exit 1
+  else
+    echo "$class: OK"
   fi
+  run=$((run + 1))
 }
 
 for t in $(find src -name "*Test.class"); do
   check $t
 done
 
-echo "Tests OK"
+echo ""
+echo "Tests run: $run, Failed: $failed"
+if [ "$failed" != "0" ]; then
+  exit 1
+fi

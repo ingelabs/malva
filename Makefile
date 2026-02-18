@@ -28,9 +28,13 @@ check: all
 	$(E) "  CHECK"
 	$(Q) ./scripts/suite
 
+checkall: all
+	$(E) "  CHECK"
+	$(Q) SUITE_RUN_ALL=1 ./scripts/suite
+
 clean:
 	$(E) "  CLEAN"
 	$(Q) - find src/ -name "*.class" | xargs rm -f
 	$(Q) rm -f compile-classes
 
-.PHONY: all check clean
+.PHONY: all check checkall clean
