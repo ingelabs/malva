@@ -301,11 +301,59 @@ public class CalendarFieldResolutionTest extends TestCase {
     assertEquals(new Date(1736951400000L), c.getTime()); // 2025-01-15 14:30 UTC
   }
 
+  private static void testResolutionAfterGetThenSet() {
+    // After get() triggers field computation, all fields are populated
+    // with computed values.  A subsequent set() should re-resolve using
+    // the newly set field, with computed fields participating at a lower
+    // priority than user-set fields.
+    Calendar c;
+
+    // get(), then set(MONTH): pattern 1 should use the computed
+    // DAY_OF_MONTH with the new MONTH.
+    // Initial: WOY=10 + DOW=FRIDAY → March 9 2018 (pattern 5).
+    // After get() + set(MONTH, JUNE): the user wants June, and the
+    // computed DAY_OF_MONTH (9) should carry over → June 9 2018.
+    c = newCalendar();
+    c.set(Calendar.YEAR, 2018);
+    c.set(Calendar.MONTH, Calendar.JANUARY);
+    c.set(Calendar.DAY_OF_MONTH, 15);
+    c.set(Calendar.WEEK_OF_YEAR, 10);
+    c.set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY);
+    c.get(Calendar.DAY_OF_WEEK);
+    c.set(Calendar.MONTH, Calendar.JUNE);
+    assertEquals(new Date(1528502400000L), c.getTime()); // 2018-06-09
+
+    // get(), then set(WEEK_OF_YEAR): pattern 5 should win using the
+    // computed DAY_OF_WEEK from the original date.
+    // Initial: Jan 15 2018 (Monday).
+    // After get() + set(WOY, 10): Monday of week 10 → March 5 2018.
+    c = newCalendar();
+    c.set(Calendar.YEAR, 2018);
+    c.set(Calendar.MONTH, Calendar.JANUARY);
+    c.set(Calendar.DAY_OF_MONTH, 15);
+    c.get(Calendar.DAY_OF_WEEK);
+    c.set(Calendar.WEEK_OF_YEAR, 10);
+    assertEquals(new Date(1520208000000L), c.getTime()); // 2018-03-05
+
+    // get(), then set(DAY_OF_WEEK): the DOW-based pattern should win
+    // using the computed WEEK_OF_MONTH from the original date.
+    // Initial: Jan 15 2018 (Monday, week 3 of January).
+    // After get() + set(DOW, FRIDAY): Friday of week 3 → Jan 19 2018.
+    c = newCalendar();
+    c.set(Calendar.YEAR, 2018);
+    c.set(Calendar.MONTH, Calendar.JANUARY);
+    c.set(Calendar.DAY_OF_MONTH, 15);
+    c.get(Calendar.DAY_OF_WEEK);
+    c.set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY);
+    assertEquals(new Date(1516320000000L), c.getTime()); // 2018-01-19
+  }
+
   public static void main(String[] args) {
     testInconsistentData();
     testIncompletePattern();
     testCloneFieldPriorities();
     testMultiArgSetPriorities();
     testHourAmPmPreservedAfterSet();
+    testResolutionAfterGetThenSet();
   }
 }
