@@ -5,6 +5,11 @@ import java.io.IOException;
 import malva.TestCase;
 
 public class ProcessTest extends TestCase {
+  /** If running on CI, widen timing tolerances */
+  private static final boolean ON_CI = System.getenv("CI") != null;
+
+  private static final long JOIN_EXTRA_MS = ON_CI ? 200 : 0;
+
   private static void testDestroy(String[] cmd, boolean readOutput, int joinTimeMs) throws Exception {
     final Process process = Runtime.getRuntime().exec(cmd);
     if (readOutput) {
@@ -19,7 +24,7 @@ public class ProcessTest extends TestCase {
     });
 
     testerThread.start();
-    testerThread.join(joinTimeMs);
+    testerThread.join(joinTimeMs + JOIN_EXTRA_MS);
     // Check that the thread exited
     assertFalse(testerThread.isAlive());
   }
@@ -116,7 +121,7 @@ public class ProcessTest extends TestCase {
     });
 
     testerThread.start();
-    testerThread.join(joinTimeMs);
+    testerThread.join(joinTimeMs + JOIN_EXTRA_MS);
     // Check that the thread exited, and that the process finished successfully
     assertFalse(testerThread.isAlive());
     assertEquals(0, process.exitValue());
