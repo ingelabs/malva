@@ -1,6 +1,9 @@
 package malva.java.lang;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import malva.TestCase;
 
@@ -40,6 +43,106 @@ public class ProcessTest extends TestCase {
     }
   }
 
+  public static void testExecFailure() {
+    // Trying to run a non-existing binary must fail with an IOException
+    assertThrows(new Block() {
+      @Override public void run() throws IOException {
+        Runtime.getRuntime().exec("malva-no-such-binary");
+      }
+    }, IOException.class);
+
+    assertThrows(new Block() {
+      @Override public void run() throws IOException {
+        Runtime.getRuntime().exec(new String[] {"malva-no-such-binary"});
+      }
+    }, IOException.class);
+
+    // Same when a non-null environment is passed
+    assertThrows(new Block() {
+      @Override public void run() throws IOException {
+        Runtime.getRuntime().exec("malva-no-such-binary", new String[] { "MALVA_TEST=1" });
+      }
+    }, IOException.class);
+  }
+
+  public static void testExecPathSearch() {
+    try {
+      // PATH must be searched if command does not contain a slash
+      Process process = Runtime.getRuntime().exec("env",
+          new String[] {"MALVA_TEST=1"});
+      readAll(process.getInputStream());
+      assertEquals(0, process.waitFor());
+
+      // Commands containing a slash must be executed directly
+      File script = File.createTempFile("malva", ".sh");
+      try {
+        FileOutputStream out = new FileOutputStream(script);
+        out.write("#!/bin/sh\nexit 0\n".getBytes("US-ASCII"));
+        out.close();
+        script.setExecutable(true);
+        process = Runtime.getRuntime().exec(script.getPath(),
+            new String[] {"MALVA_TEST=1"});
+        assertEquals(0, process.waitFor());
+      } finally {
+        script.delete();
+      }
+
+      // ...and the PATH must not be searched for them.
+      // Running "./env" from an empty directory must fail, even though
+      // "env" is found in the PATH. If the PATH were (wrongly) searched,
+      // "./env" would resolve against a PATH entry (e.g. "/usr/bin" +
+      // "/./env") and succeed.
+      final File emptyDir = File.createTempFile("malva", null);
+      emptyDir.delete();
+      emptyDir.mkdir();
+      try {
+        assertThrows(new Block() {
+          @Override public void run() throws IOException {
+            Runtime.getRuntime().exec(new String[] {"./env"},
+                                      new String[] {"MALVA_TEST=1"}, emptyDir);
+          }
+        }, IOException.class);
+      } finally {
+        emptyDir.delete();
+      }
+    } catch (Exception e) {
+      fail("Test failed: " + e);
+    }
+  }
+
+  public static void testExecEnvironment() {
+    try {
+      // The passed environment must reach the child process
+      Process process = Runtime.getRuntime().exec(new String[] {"env"},
+          new String[] {"MALVA_TEST=1"});
+      String output = readAll(process.getInputStream());
+      assertEquals(0, process.waitFor());
+      assertTrue(output.contains("MALVA_TEST=1"));
+    } catch (Exception e) {
+      fail("Test failed: " + e);
+    }
+  }
+
+  public static void testExecInDir() {
+    try {
+      File dir = new File("/tmp");
+      Process process = Runtime.getRuntime().exec(new String[] {"pwd"}, null, dir);
+      String output = readAll(process.getInputStream());
+      assertEquals(0, process.waitFor());
+      assertEquals(dir.getCanonicalPath(), output.trim());
+    } catch (Exception e) {
+      fail("Test failed: " + e);
+    }
+
+    // A non-existing working directory must fail with an IOException
+    assertThrows(new Block() {
+      @Override public void run() throws IOException {
+        Runtime.getRuntime().exec(new String[] {"pwd"}, null,
+                                  new File("/no/such/dir"));
+      }
+    }, IOException.class);
+  }
+
   public static void testExitValue() {
 
     try {
@@ -51,6 +154,14 @@ public class ProcessTest extends TestCase {
       assertEquals(0, process.exitValue());
     } catch (Exception e) {
       fail("Test failed: " + e.getMessage());
+    }
+
+    try {
+      // A non-zero exit value must be reported as-is
+      Process process = Runtime.getRuntime().exec(new String[] {"sh", "-c", "exit 7"});
+      assertEquals(7, process.waitFor());
+    } catch (Exception e) {
+      fail("Test failed: " + e);
     }
 
     try {
@@ -156,9 +267,21 @@ public class ProcessTest extends TestCase {
     }
   }
 
+  private static String readAll(InputStream in) throws IOException {
+    StringBuilder sb = new StringBuilder();
+    int c;
+    while ((c = in.read()) != -1)
+      sb.append((char) c);
+    return sb.toString();
+  }
+
   public static void main(String[] args) {
     testDestroy();
-//    testExitValue();
+    testExecEnvironment();
+    testExecFailure();
+    testExecInDir();
+    testExecPathSearch();
+    testExitValue();
     testGetErrorStream();
     testGetInputStream();
     testGetOutputStream();
