@@ -65,6 +65,46 @@ public class ProcessTest extends TestCase {
     }, IOException.class);
   }
 
+  public static void testFailedExecDoesNotCloseUnrelatedFds() {
+    /*
+     * GNU Classpath had a bug where an exec() that fails early (due to e.g.
+     * NULL command) could close unrelated fds.
+     *
+     * We reproduced this on Linux by successfully spawning a child first,
+     * then trying an invalid spawn. After the successful nativeSpawn()
+     * returns, its parent-side pipe fd values remain in the released native
+     * stack space. The subsequent nativeSpawn() may reuse that stack space
+     * and, because its fds array was never initialized, close those stale
+     * pipe fds during cleanup. The test keeps the first child running so
+     * that the unintended close can be observed easily.
+     *
+     * Stack reuse is not guaranteed, but we managed to reliably reproduce
+     * the problem when running this sequence twice. Hence, we make three
+     * attempts.
+     */
+    for (int attempt = 0; attempt < 3; attempt++) {
+      try {
+        final Process process = Runtime.getRuntime().exec(new String[] { "cat" });
+        try {
+          assertThrows(new Block() {
+            @Override
+            public void run() throws IOException {
+              Runtime.getRuntime().exec(new String[] { null });
+            }
+          }, NullPointerException.class);
+
+          process.getOutputStream().write('X');
+          process.getOutputStream().flush();
+          assertEquals((int) 'X', process.getInputStream().read());
+        } finally {
+          process.destroy();
+        }
+      } catch (IOException e) {
+        fail("Failed exec closed another process pipe: " + e);
+      }
+    }
+  }
+
   public static void testExecPathSearch() {
     try {
       // PATH must be searched if command does not contain a slash
@@ -279,6 +319,7 @@ public class ProcessTest extends TestCase {
     testDestroy();
     testExecEnvironment();
     testExecFailure();
+    testFailedExecDoesNotCloseUnrelatedFds();
     testExecInDir();
     testExecPathSearch();
     testExitValue();
