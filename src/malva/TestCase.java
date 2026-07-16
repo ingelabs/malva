@@ -94,4 +94,8 @@ public class TestCase {
   protected static void fail(String s) {
     throw new AssertionError(s);
   }
+
+  protected static void skip(String reason) {
+    System.err.println("SKIP: " + reason);
+  }
 }
