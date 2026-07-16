@@ -1,6 +1,7 @@
 package malva.java.lang;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,6 +103,89 @@ public class ProcessTest extends TestCase {
       } catch (IOException e) {
         fail("Failed exec closed another process pipe: " + e);
       }
+    }
+  }
+
+  public static void testExecDoesNotLeakProcessPipes() throws IOException, InterruptedException {
+    Process first = null;
+    Process second = null;
+
+    try {
+      first = Runtime.getRuntime().exec(new String[] {"cat"});
+
+      // Start another process while the write end of the first process's
+      // stdin pipe is open. The new process must not keep a copy after exec.
+      second = Runtime.getRuntime().exec(new String[] {"sleep", "10"});
+
+      // Close the write end of the first process's stdin; cat should see
+      // an EOF and exit.
+      first.getOutputStream().close();
+
+      final Process p1 = first;
+      Thread waiter = new Thread(new Runnable() {
+        @Override public void run() {
+          try {
+            p1.waitFor();
+          } catch (InterruptedException ignored) {
+          }
+        }
+      });
+      waiter.start();
+      waiter.join(1000 + JOIN_EXTRA_MS);
+
+      assertFalse(waiter.isAlive());
+      assertEquals(0, first.exitValue());
+
+      // The second process must still be running: the first process should
+      // have observed EOF without waiting for the second one to exit.
+      final Process p2 = second;
+      assertThrows(new Block() {
+        @Override public void run() {
+          p2.exitValue();
+        }
+      }, IllegalThreadStateException.class);
+    } finally {
+      if (first != null)
+        first.destroy();
+      if (second != null)
+        second.destroy();
+    }
+  }
+
+  public static void testExecDoesNotLeakFds() throws IOException, InterruptedException {
+    // Determine the process fd dir (platform-dependent)
+    String fdDir;
+    String os = System.getProperty("os.name");
+    if (os.equals("Linux"))
+      fdDir = "/proc/self/fd";
+    else if (os.equals("Darwin") || os.startsWith("Mac"))
+      fdDir = "/dev/fd";
+    else {
+      skip("testExecDoesNotLeakFds: no process fd directory on " + os);
+      return;
+    }
+
+    // Hold a set of open fds that must not be visible in the child
+    FileInputStream[] held = new FileInputStream[8];
+    for (int i = 0; i < held.length; i++)
+      held[i] = new FileInputStream("/etc/hosts");
+
+    try {
+      Process process = Runtime.getRuntime().exec(new String[] {"ls", fdDir});
+      String output = readAll(process.getInputStream());
+      assertEquals(0, process.waitFor());
+
+      StringBuilder leaked = new StringBuilder();
+      for (String entry : output.trim().split("\\s+")) {
+        // Only stdio (0-2) may be inherited;
+        // fd 3 is used by ls itself to read the process fd directory
+        if (Integer.parseInt(entry) > 3)
+          leaked.append(' ').append(entry);
+      }
+      assertEquals("", leaked.toString());
+    } finally {
+      for (FileInputStream f : held)
+        f.close();
     }
   }
 
@@ -315,11 +399,13 @@ public class ProcessTest extends TestCase {
     return sb.toString();
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     testDestroy();
     testExecEnvironment();
     testExecFailure();
     testFailedExecDoesNotCloseUnrelatedFds();
+    testExecDoesNotLeakProcessPipes();
+    testExecDoesNotLeakFds();
     testExecInDir();
     testExecPathSearch();
     testExitValue();
