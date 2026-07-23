@@ -161,7 +161,7 @@ public class ProcessTest extends TestCase {
     else if (os.equals("Darwin") || os.startsWith("Mac"))
       fdDir = "/dev/fd";
     else {
-      skip("testExecDoesNotLeakFds: no process fd directory on " + os);
+      logSkip("testExecDoesNotLeakFds: no process fd directory on " + os);
       return;
     }
 
