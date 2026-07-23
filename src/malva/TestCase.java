@@ -95,7 +95,7 @@ public class TestCase {
     throw new AssertionError(s);
   }
 
-  protected static void skip(String reason) {
+  protected static void logSkip(String reason) {
     System.err.println("SKIP: " + reason);
   }
 }
