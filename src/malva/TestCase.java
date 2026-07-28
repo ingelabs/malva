@@ -1,5 +1,6 @@
 package malva;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -93,6 +94,13 @@ public class TestCase {
 
   protected static void fail(String s) {
     throw new AssertionError(s);
+  }
+
+  protected static File nativeHelper(String name) {
+    String dir = System.getenv("MALVA_NATIVE_DIR");
+    if (dir == null)
+      fail("MALVA_NATIVE_DIR is not set");
+    return new File(dir, name);
   }
 
   protected static void logSkip(String reason) {
