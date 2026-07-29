@@ -103,6 +103,23 @@ public class TestCase {
     return new File(dir, name);
   }
 
+  protected static boolean isOpenJdk() {
+    String runtimeName = System.getProperty("java.runtime.name");
+    String vmName = System.getProperty("java.vm.name");
+    return (runtimeName != null && runtimeName.indexOf("OpenJDK") != -1)
+        || (vmName != null && vmName.indexOf("OpenJDK") != -1);
+  }
+
+  protected static int javaFeatureVersion() {
+    // Use java.specification.version which always contains either "1.x"
+    // (x <= 8) or just "x" (>= 9), unlike java.version which may carry
+    // update/patch suffixes ("1.8.0_292", "21-ea", etc.).
+    String version = System.getProperty("java.specification.version");
+    if (version.startsWith("1."))
+      version = version.substring(2);
+    return Integer.parseInt(version);
+  }
+
   protected static void logSkip(String reason) {
     System.err.println("SKIP: " + reason);
   }
