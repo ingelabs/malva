@@ -189,6 +189,32 @@ public class ProcessTest extends TestCase {
     }
   }
 
+  public static void testExecClearsSignalMask() throws IOException, InterruptedException {
+    Process process = Runtime.getRuntime().exec(
+        new String[] {nativeHelper("sigreport").getAbsolutePath()});
+    String output = readAll(process.getInputStream()).trim();
+    String error = readAll(process.getErrorStream()).trim();
+    int status = process.waitFor();
+    if (status != 0)
+      fail("sigreport exited with status " + status + ": " + error);
+    if (output.length() == 0)
+      fail("Empty signal report");
+
+    assertNoBlockedSignals(output);
+  }
+
+  private static void assertNoBlockedSignals(String report) {
+    for (String line : report.split("\n"))
+      if (line.contains("blocked")) {
+        // OpenJDK used to start children with SIGQUIT blocked (JDK-8234262).
+        // This was fixed in OpenJDK 20 (for the default posix_spawn mechanism).
+        if (line.startsWith("SIGQUIT:") && isOpenJdk() && javaFeatureVersion() < 20)
+          continue;
+
+        fail("Signal is blocked in spawned process: " + line);
+      }
+  }
+
   public static void testExecPathSearch() {
     try {
       // PATH must be searched if command does not contain a slash
@@ -406,6 +432,7 @@ public class ProcessTest extends TestCase {
     testFailedExecDoesNotCloseUnrelatedFds();
     testExecDoesNotLeakProcessPipes();
     testExecDoesNotLeakFds();
+    testExecClearsSignalMask();
     testExecInDir();
     testExecPathSearch();
     testExitValue();
