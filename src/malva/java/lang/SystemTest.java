@@ -159,7 +159,9 @@ public class SystemTest extends TestCase {
     assertNotNull(props.getProperty("java.library.path"));
     assertNotNull(props.getProperty("java.io.tmpdir"));
     assertNull(props.getProperty("java.compiler"));
-    assertNotNull(props.getProperty("java.ext.dirs"));
+    if (javaFeatureVersion() <= 8) {
+      assertNotNull(props.getProperty("java.ext.dirs"));
+    }
     assertNotNull(props.getProperty("os.name"));
     assertNotNull(props.getProperty("os.arch"));
     assertNotNull(props.getProperty("file.separator"));
