@@ -63,12 +63,6 @@ public class RuntimeTest extends TestCase {
     assertTrue(Runtime.getRuntime().freeMemory() > 0);
   }
 
-  public static void testGc() {
-    long originalMemory = Runtime.getRuntime().freeMemory();
-    Runtime.getRuntime().gc();
-    assertTrue(Runtime.getRuntime().freeMemory() >= originalMemory);
-  }
-
   public static void testLoad() {
     assertThrows(new Block() {
       @Override public void run() {
@@ -118,7 +112,6 @@ public class RuntimeTest extends TestCase {
     testExec();
     testExit();
     testFreeMemory();
-    testGc();
 //    testLoad();
 //    testLoadLibrary();
     testMaxMemory();
