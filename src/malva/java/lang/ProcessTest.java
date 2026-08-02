@@ -153,36 +153,25 @@ public class ProcessTest extends TestCase {
   }
 
   public static void testExecDoesNotLeakFds() throws IOException, InterruptedException {
-    // Determine the process fd dir (platform-dependent)
-    String fdDir;
-    String os = System.getProperty("os.name");
-    if (os.equals("Linux"))
-      fdDir = "/proc/self/fd";
-    else if (os.equals("Darwin") || os.startsWith("Mac"))
-      fdDir = "/dev/fd";
-    else {
-      logSkip("testExecDoesNotLeakFds: no process fd directory on " + os);
-      return;
-    }
-
     // Hold a set of open fds that must not be visible in the child
     FileInputStream[] held = new FileInputStream[8];
     for (int i = 0; i < held.length; i++)
       held[i] = new FileInputStream("/etc/hosts");
 
     try {
-      Process process = Runtime.getRuntime().exec(new String[] {"ls", fdDir});
-      String output = readAll(process.getInputStream());
-      assertEquals(0, process.waitFor());
-
-      StringBuilder leaked = new StringBuilder();
-      for (String entry : output.trim().split("\\s+")) {
-        // Only stdio (0-2) may be inherited;
-        // fd 3 is used by ls itself to read the process fd directory
-        if (Integer.parseInt(entry) > 3)
-          leaked.append(' ').append(entry);
-      }
-      assertEquals("", leaked.toString());
+      // fdreport prints every fd above stderr that is open in the child
+      // and exits with status 1 if it found any; only stdio (0-2) may
+      // be inherited
+      Process process = Runtime.getRuntime().exec(
+          new String[] {nativeHelper("fdreport").getAbsolutePath()});
+      String output = readAll(process.getInputStream()).trim();
+      String error = readAll(process.getErrorStream()).trim();
+      int status = process.waitFor();
+      if (status == 1)
+        fail("Child inherited fds: " + output.replaceAll("\\s+", " "));
+      if (status != 0)
+        fail("fdreport exited with status " + status + ": " + error);
+      assertEquals("", output);
     } finally {
       for (FileInputStream f : held)
         f.close();
