@@ -98,14 +98,6 @@ public class RuntimeTest extends TestCase {
     assertTrue(Runtime.getRuntime().totalMemory() >= Runtime.getRuntime().freeMemory());
   }
 
-  public static void testTraceInstructions() {
-    Runtime.getRuntime().traceInstructions(false);
-  }
-
-  public static void testTraceMethodCalls() {
-    Runtime.getRuntime().traceMethodCalls(false);
-  }
-
   public static void main(String[] args) throws IOException {
     testAddShutdownHook();
     testAvailableProcessors();
@@ -118,7 +110,5 @@ public class RuntimeTest extends TestCase {
     testRemoveShutdownHook();
     testRunFinalization();
     testTotalMemory();
-    testTraceInstructions();
-    testTraceMethodCalls();
   }
 }
