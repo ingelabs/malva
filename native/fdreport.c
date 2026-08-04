@@ -6,15 +6,13 @@
 #include <string.h>
 #include <unistd.h>
 
-/* Prints the number of every open file descriptor above stderr, one
-   per line, and exits with status 1 if it found any. This opens no
-   file descriptors of its own, so anything it reports was inherited
-   across exec(). */
+/* Prints the number of every open file descriptor, one per line.
+   This opens no file descriptors of its own, so anything it reports
+   was inherited across exec(). */
 
 int main(void) {
   long limit;
   long fd;
-  int leaks = 0;
 
   limit = sysconf(_SC_OPEN_MAX);
 
@@ -23,7 +21,7 @@ int main(void) {
     limit = 65536;
   }
 
-  for (fd = 3; fd < limit; fd++) {
+  for (fd = 0; fd < limit; fd++) {
     if (fcntl((int)fd, F_GETFD) == -1) {
       if (errno == EBADF)
         continue;
@@ -31,8 +29,7 @@ int main(void) {
       return 2;
     }
     printf("%ld\n", fd);
-    leaks++;
   }
 
-  return leaks > 0 ? 1 : 0;
+  return 0;
 }

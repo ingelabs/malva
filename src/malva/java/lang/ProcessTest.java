@@ -159,19 +159,16 @@ public class ProcessTest extends TestCase {
       held[i] = new FileInputStream("/etc/hosts");
 
     try {
-      // fdreport prints every fd above stderr that is open in the child
-      // and exits with status 1 if it found any; only stdio (0-2) may
-      // be inherited
+      // fdreport prints the number of every fd open in the child, one
+      // per line; only stdio (0-2) may be inherited
       Process process = Runtime.getRuntime().exec(
           new String[] {nativeHelper("fdreport").getAbsolutePath()});
       String output = readAll(process.getInputStream()).trim();
       String error = readAll(process.getErrorStream()).trim();
       int status = process.waitFor();
-      if (status == 1)
-        fail("Child inherited fds: " + output.replaceAll("\\s+", " "));
       if (status != 0)
         fail("fdreport exited with status " + status + ": " + error);
-      assertEquals("", output);
+      assertEquals("0 1 2", output.replaceAll("\\s+", " "));
     } finally {
       for (FileInputStream f : held)
         f.close();
