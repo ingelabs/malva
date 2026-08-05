@@ -301,6 +301,19 @@ public class ProcessTest extends TestCase {
     }
 
     try {
+      // Exit values are in the range 0-255 and must not be truncated
+      // to a signed byte (e.g. 250 must not become -6)
+      int[] codes = {127, 128, 200, 250, 255};
+      for (int code : codes) {
+        Process process = Runtime.getRuntime().exec(
+            new String[] {"sh", "-c", "exit " + code});
+        assertEquals(code, process.waitFor());
+      }
+    } catch (Exception e) {
+      fail("Test failed: " + e);
+    }
+
+    try {
       ProcessBuilder processBuilder = new ProcessBuilder("sleep", "10");
       final Process process = processBuilder.start();
 
