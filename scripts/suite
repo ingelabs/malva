@@ -6,7 +6,7 @@ failed=0
 function check
 {
   class=$(echo $1 | sed "s/.class//g" | sed "s/^src.//g")
-  output=$($JAVA -cp src $class)
+  $JAVA -cp src $class
   if [ "$?" != "0" ]; then
     echo "$class: FAILED"
     failed=$((failed + 1))
@@ -17,7 +17,7 @@ function check
   run=$((run + 1))
 }
 
-for t in $(find src -name "*Test.class"); do
+for t in $(find src -name "*Test.class" | sort); do
   check $t
 done
 
