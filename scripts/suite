@@ -5,19 +5,27 @@ failed=0
 
 function check
 {
-  class=$(echo $1 | sed "s/.class//g" | sed "s/^src.//g")
-  $JAVA -cp src $class
+  name=${1#src/}
+  case "$1" in
+    *.class)
+      name=${name%.class}
+      $JAVA -cp src "$name"
+      ;;
+    *.sh)
+      bash "$1"
+      ;;
+  esac
   if [ "$?" != "0" ]; then
-    echo "$class: FAILED"
+    echo "$name: FAILED"
     failed=$((failed + 1))
     [ "$SUITE_RUN_ALL" != "1" ] && exit 1
   else
-    echo "$class: OK"
+    echo "$name: OK"
   fi
   run=$((run + 1))
 }
 
-for t in $(find src -name "*Test.class" | sort); do
+for t in $(find src \( -name "*Test.class" -o -name "*test.sh" \) | sort -f); do
   check $t
 done
 
