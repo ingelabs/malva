@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# GNU coreutils installs this as gtimeout on some systems, including macOS
+if command -v timeout >/dev/null 2>&1; then
+  timeout_command=timeout
+elif command -v gtimeout >/dev/null 2>&1; then
+  timeout_command=gtimeout
+else
+  timeout_command=
+  echo "WARNING: timeout/gtimeout not found; running tests without a timeout" >&2
+fi
+
+# Default to 30 seconds, override with TEST_TIMEOUT env var
+TEST_TIMEOUT=${TEST_TIMEOUT:-30}
+
+timeout_prefix=()
+if [ -n "$timeout_command" ]; then
+  timeout_prefix=("$timeout_command" --verbose --kill-after=5s "${TEST_TIMEOUT}s")
+fi
+
 run=0
 failed=0
 
@@ -9,14 +27,15 @@ function check
   case "$1" in
     *.class)
       name=${name%.class}
-      $JAVA -cp src "$name"
+      "${timeout_prefix[@]}" $JAVA -cp src "$name"
       ;;
     *.sh)
-      bash "$1"
+      "${timeout_prefix[@]}" bash "$1"
       ;;
   esac
-  if [ "$?" != "0" ]; then
-    echo "$name: FAILED"
+  status=$?
+  if [ "$status" != "0" ]; then
+    echo "$name: FAILED (exit $status)"
     failed=$((failed + 1))
     [ "$SUITE_RUN_ALL" != "1" ] && exit 1
   else
